@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import random
+import json
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -142,4 +143,57 @@ async def on_command_error(ctx, error):
 
     await ctx.send(f"An error occurred: {str(error)}")
 
-bot.run('MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GiypfL.QMKBn0NIv6qROBgWWFhmjucEOrjz4WaKXghJBo')
+
+
+class User(json.JSONEncoder):
+    def __init__(self,name,characters,message_count):
+        self.name = name
+        self.characters = characters
+        self.message_count = message_count
+    
+    def default(self, o):
+        return o.__dict__
+    
+class Character(json.JSONEncoder):
+    def __init__(self,name,level):
+        self.name = name
+        self.level = level
+    def default(self, o):
+        return o.__dict__
+
+users_info = {}
+
+@bot.event
+async def on_member_join(member):
+    if not(member.id in users_info):
+        users_info[member.id] = User(member.id,None,None)
+
+@bot.event
+async def on_ready():
+    for guild in bot.guilds:
+        for member in guild.members:
+           if not(member.id in users_info):
+                users_info[member.id] = User(member.id,None,None)
+                
+    print(f'Logged in as {bot.user.name} ({bot.user.id})')
+    
+    
+@bot.command()
+async def show_user_data(ctx):
+        await ctx.send(users_info)
+        with open('user_data.json', 'w') as f:
+            json.dump([user.__dict__ for user in users_info])
+
+async def async_cleanup():  # example cleanup function
+        with open('user_data.json', 'w') as f:
+
+            json.dump([User.__dict__])
+
+@bot.event
+async def on_close(self):
+    # do your cleanup here
+    await self.async_cleanup()
+    
+    await self.close()  # don't forget this!
+
+bot.run('MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GrrSrf.ZH-Q84ySlS8AUm8lnJLKgktv6lbpyns7KehwME')
