@@ -2,11 +2,42 @@ import discord
 from discord.ext import commands
 import random
 import json
+import os
 
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
+
+global USER_LIST
+USER_LIST = {}
+class User():
+    def __init__(self,name,characters,message_count):
+        self.name = name
+        self.characters = characters
+        self.message_count = message_count
+
+    def ConvertToDict(self):
+        new_characters = []
+        for character in self.characters:
+            new_characters.append(character.__dict__)
+        old_characters = self.characters
+        self.characters = new_characters
+        return(self.__dict__)
+    
+    def ConvertToClass(self):
+        new_characters = []
+        for c in self.characters:
+            new_characters.append(Character(c.name,c.level))
+        self.characters = new_characters
+
+        
+
+class Character():
+    def __init__(self,name,level):
+        self.name = name
+        self.level = level
+
 
 spawned_character = None  # Variable to store the currently spawned character
 temporary_characters = {
@@ -31,8 +62,25 @@ def generate_hint(character_name):
 message_counter = 0
 target_message_count = 0
 
+def is_file_empty(file_path):
+    """ Check if file is empty by confirming if its size is 0 bytes"""
+    # Check if file exists and it is empty
+    return os.path.exists(file_path) and os.stat(file_path).st_size == 0
+
 @bot.event
 async def on_ready():
+    with open('user_data3.json') as f:
+        data = json.load(f)
+        f.close()
+        print(data)
+    for user in data:
+        character_list = []
+        for c in data[user]['characters']:
+            character_list.append(Character(c['name'],c['level']))
+        USER_LIST[int(user)] = User(data[user]['name'],character_list,data[user]['message_count'])
+        USER_LIST[int(user)].ConvertToClass()
+        print(USER_LIST[int(user)].characters[0].name)    
+        print(USER_LIST[int(user)].characters)
     print(f'Logged in as {bot.user.name} ({bot.user.id})')
 
 @bot.event
@@ -86,11 +134,6 @@ async def hint(ctx):
     else:
         await ctx.send("No character has been spawned yet.")
 
-user_scores = {}  # Dictionary to store user scores
-
-user_crews = {}  # Dictionary to store user crews
-
-user_crews = {}  # Dictionary to store user crews
 
 @bot.command(aliases=['c'])
 async def catch(ctx, character_name):
@@ -100,9 +143,9 @@ async def catch(ctx, character_name):
         if character_name.lower() == spawned_character.lower():
             # Code to handle correct catch
             user = ctx.author
-            if user.id not in user_crews:
-                user_crews[user.id] = set()
-            user_crews[user.id].add(spawned_character)
+            if not(user.id in USER_LIST):
+                USER_LIST[user.id] = User(user.id,[],0)
+            USER_LIST[user.id].characters.append(Character(spawned_character,0))
             await ctx.send(f"Congratulations! You caught {spawned_character}. {spawned_character} has joined your pirate crew.")
             spawned_character = None  # Reset spawned character
         else:
@@ -114,10 +157,11 @@ async def catch(ctx, character_name):
 @bot.command(aliases=['pc', 'crew'])
 async def pirate_crew(ctx):
     user = ctx.author
-    if user.id in user_crews:
-        crew = sorted(user_crews[user.id])
+    if user.id in USER_LIST:
+        crew = USER_LIST[user.id].characters
         if crew:
-            crew_list = "\n".join(crew)
+            for character in crew:
+                crew_list = f"{character.name} Lvl: {character.level}"
             response = f"```\nYour Pirate Crew:\n\n{crew_list}\n```"
 
             # Adjust the width of the response
@@ -127,11 +171,12 @@ async def pirate_crew(ctx):
             response += "Your Pirate Crew:".ljust(max_width // 3 + 3) + "\n\n"  # Adjust the width of the title
             response += "\n".join(line.ljust(max_width // 3) for line in lines[3:])  # Adjust the width of the crew list
             response += "\n```"
-
             await ctx.send(response)
         else:
+            print("here")
             await ctx.send("Your pirate crew is empty. Catch some characters using the `!catch` command!")
     else:
+        print(ctx.author.id)
         await ctx.send("Your pirate crew is empty. Catch some characters using the `!catch` command!")
 
 
@@ -145,55 +190,33 @@ async def on_command_error(ctx, error):
 
 
 
-class User(json.JSONEncoder):
-    def __init__(self,name,characters,message_count):
-        self.name = name
-        self.characters = characters
-        self.message_count = message_count
-    
-    def default(self, o):
-        return o.__dict__
-    
-class Character(json.JSONEncoder):
-    def __init__(self,name,level):
-        self.name = name
-        self.level = level
-    def default(self, o):
-        return o.__dict__
-
-users_info = {}
-
 @bot.event
 async def on_member_join(member):
-    if not(member.id in users_info):
-        users_info[member.id] = User(member.id,None,None)
+    if not(member.id in USER_LIST):
+        USER_LIST[member.id] = User(member.id,[],0)
 
-@bot.event
-async def on_ready():
-    for guild in bot.guilds:
-        for member in guild.members:
-           if not(member.id in users_info):
-                users_info[member.id] = User(member.id,None,None)
-                
-    print(f'Logged in as {bot.user.name} ({bot.user.id})')
+@bot.command(aliases=['sa'])
+async def save(ctx):
+    user_list = {}
+    for user in USER_LIST:
+        user_list[user] = USER_LIST[user].ConvertToDict()
+
+    with open('user_data3.json', 'w') as f:
+        json.dump(user_list,f,indent=4)
+        f.close()
+    print('Here')
+
+@bot.command(aliases=['d'])
+async def user_info(ctx):
+    user_list = {}
+    for user in USER_LIST:
+        user_list[user] = USER_LIST[user].ConvertToDict()
+
+    with open('user_data3.json', 'w') as f:
+        print(json.dump(user_list,f,indent=4))
+        f.close()
     
-    
-@bot.command()
-async def show_user_data(ctx):
-        await ctx.send(users_info)
-        with open('user_data.json', 'w') as f:
-            json.dump([user.__dict__ for user in users_info])
 
-async def async_cleanup():  # example cleanup function
-        with open('user_data.json', 'w') as f:
-
-            json.dump([User.__dict__])
-
-@bot.event
-async def on_close(self):
-    # do your cleanup here
-    await self.async_cleanup()
-    
-    await self.close()  # don't forget this!
-
-bot.run('MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GrrSrf.ZH-Q84ySlS8AUm8lnJLKgktv6lbpyns7KehwME')
+        
+        
+bot.run('MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GHWs8M.6zyYYhVXJcYSuE_K7x3GYPWEqiU-D4BDQg8VxA')

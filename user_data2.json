@@ -1,0 +1,27 @@
+{
+    "0": {
+        "name": "Shazeel",
+        "characters": [
+            {
+                "name": "zoro",
+                "level": 0
+            }
+        ],
+        "message_count": null
+    },
+    "1106013055499894896": {
+        "name": 1106013055499894896,
+        "characters": [],
+        "message_count": 0
+    },
+    "233679947774951424": {
+        "name": 233679947774951424,
+        "characters": [
+            {
+                "name": "Zoro",
+                "level": 0
+            }
+        ],
+        "message_count": 0
+    }
+}

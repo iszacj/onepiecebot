@@ -27,4 +27,4 @@ for user in USER_LIST:
 
 with open('user_data.json', 'w') as f:
     json.dump(user_list,f,indent=4)
-    f.close()
+
