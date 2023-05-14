@@ -1,162 +1,367 @@
 import discord
 from discord.ext import commands
+from discord import Reaction, User
 import random
-import json
+from typing import Union
+
+
+characters = {
+    "Shanks": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231484177715261/shanks.png",
+    "Benn Beckman": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231484634890250/benn_beckman.png",
+    "Lucky Roux": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231483535982592/lucky_roux.png",
+    "Yasopp": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231483817017364/yasopp.png",
+    "Kaido": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231544558911518/kaido.png",
+    "King": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231544865103952/king.png",
+    "Queen": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231543787167744/queen.png",
+    "Jack": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231544214995006/jack.png",
+    "Big Mom": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231323636547644/big_mom.png",
+    "Katakuri": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231323250655364/katakuri.png",
+    "Smoothie": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231323967881247/smoothie.png",
+    "Cracker": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231322852212766/cracker.png",
+    "Blackbeard": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231447242690669/blackbeard.png",
+    "Jesus Burgess": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231447540473976/jesus_burges.png",
+    "Van Augur": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231446798082068/van_augr.png",
+    "Shiryu": "https://cdn.discordapp.com/attachments/1106203961679155290/1106231446445772922/shiryu.png",
+    "Luffy": "https://cdn.discordapp.com/attachments/1106203918729478195/1106220323159953468/IMG_1457.png",
+    "Zoro": "https://cdn.discordapp.com/attachments/1106203918729478195/1106222017658765433/zoro.png",
+    "Nami": "https://cdn.discordapp.com/attachments/1106203918729478195/1106222008393547806/nami.png",
+    "Usopp": "https://cdn.discordapp.com/attachments/1106203918729478195/1106221990106370068/usopp.png",
+    "Sanji": "https://cdn.discordapp.com/attachments/1106203918729478195/1106221979893235712/sanji.png",
+    "Chopper": "https://cdn.discordapp.com/attachments/1106203918729478195/1106221968560242688/chopper.png",
+    "Nico Robin": "https://cdn.discordapp.com/attachments/1106203918729478195/1106223976180617247/robin.png",
+    "Franky": "https://cdn.discordapp.com/attachments/1106203918729478195/1106223987232604190/franky.png",
+    "Brook": "https://cdn.discordapp.com/attachments/1106203918729478195/1106223997613518878/brook.png",
+    "Jinbe": "https://cdn.discordapp.com/attachments/1106203918729478195/1106224015900692530/jinbe.png",
+}
+
+# Add more characters and image links here...
 
 # Setting up the bot with necessary intents
 intents = discord.Intents.default()
 intents.typing = True
 intents.presences = True
 intents.message_content = True
+intents.reactions = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Dictionary of character names and their image URLs
-characters = {
-    "Luffy": "https://cdn.discordapp.com/attachments/1106078732457873459/1106078788984520805/luffy.png",
-    "Zoro": "https://cdn.discordapp.com/attachments/1106078732457873459/1106078924347297812/zoro.png",
-    "Nami": "https://cdn.discordapp.com/attachments/1106078732457873459/1106079299460669480/nami.png",
-    "Usopp": "https://cdn.discordapp.com/attachments/1106078732457873459/1106078924015935558/usopp.png",
-    "Sanji": "https://cdn.discordapp.com/attachments/1106078732457873459/1106078923613286440/sanji.png",
-    "Chopper": "https://cdn.discordapp.com/attachments/1106078732457873459/1106078922795393035/chopper.png"
-}
+spawned_character = None  # Global variable to store the spawned character's name
 
-# Dictionary to store pirate crews
 pirate_crews = {}
+
 
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user.name}")
 
-@bot.command(aliases=["s"])
-async def spawn(ctx):
+
+message_counts = {}  # Dictionary to store message counts per user
+
+@bot.event
+async def on_message(message):
     global pirate_crews
+    global message_counts
 
-    # Create an empty list for the user's pirate crew if it doesn't exist
-    if pirate_crews.get(ctx.author.id) is None:
-        pirate_crews[ctx.author.id] = []
-
-    # Check if the user has caught all the characters
-    if len(pirate_crews[ctx.author.id]) == len(characters):
-        await ctx.send("You have already caught all the characters.")
+    # Check if the author is the bot itself or a DM
+    if message.author == bot.user or isinstance(message.channel, discord.DMChannel):
         return
 
-    # Randomly select a character that the user hasn't caught yet
-    spawned_character = random.choice(list(set(characters.keys()) - set(pirate_crews[ctx.author.id])))
-    character_image_url = characters[spawned_character]
+    # Check if the author has a pirate crew list
+    if pirate_crews.get(message.author.id) is None:
+        pirate_crews[message.author.id] = []
 
-    await ctx.send(f"A One Piece character has been spawned! Catch the character using the command `!catch [name]`.")
-    await ctx.send(character_image_url)  # Send the character's image URL
+    # Update the message count for the user
+    message_counts[message.author.id] = message_counts.get(message.author.id, 0) + 1
 
-@bot.command(aliases=["c"])
-async def catch_character(ctx, character_name):
-    global pirate_crews
+    # Randomly determine the spawn threshold between 20 and 35 messages
+    spawn_threshold = random.randint(20, 35)
 
-    # Create an empty list for the user's pirate crew if it doesn't exist
-    if pirate_crews.get(ctx.author.id) is None:
-        pirate_crews[ctx.author.id] = []
+    if message_counts[message.author.id] >= spawn_threshold:
+    # Reset the message count for the user
+        message_counts[message.author.id] = 0
 
-    # Check if the character name is valid
-    if character_name.capitalize() not in characters:
-        await ctx.send("Invalid character name.")
-        return
+        # Randomly select a character that the user hasn't caught yet
+        available_characters = list(set(characters.keys()) - set(pirate_crews.get(message.author.id, [])))
+        if available_characters:
+            spawned_character = random.choice(available_characters)
+            character_image_url = characters[spawned_character]
 
-    # Check if the user has already caught the character
-    if character_name.capitalize() in pirate_crews[ctx.author.id]:
-        await ctx.send("You have already caught this character.")
-        return
+            # Create an embedded message
+            embed = discord.Embed(title="A One Piece character has been spawned!", color=discord.Color.blue())
 
-    # Add the character to the user's pirate crew
-    pirate_crews[ctx.author.id].append(character_name.capitalize())
-    await ctx.send(f"{character_name.capitalize()} has joined your pirate crew!")
+            # Add the catch instructions and character image to the embed
+            embed.add_field(name="Catch the character", value=f"Use the command `!catch [name]` to catch the character.", inline=False)
+            embed.set_image(url=character_image_url)
+
+        await message.channel.send(embed=embed)  # Send the embedded message
+    
+
+    await bot.process_commands(message)  # Process other commands
 
 @bot.command(aliases=['pc', 'crew'])
-async def piratecrew(ctx):
-    pirate_crew = pirate_crews.get(ctx.author.id, [])
+async def piratecrew(ctx, *, args=""):
+    user_character_array = user_characters.get(ctx.author.id, [])
 
     # Check if the user has caught a character
-    if not pirate_crew:
+    if not user_character_array:
         await ctx.send("Your pirate crew is empty.")
         return
 
-    pirate_crew.sort()
-    crew_list = "\n".join(pirate_crew)
+    pirate_crew = user_character_array.copy()
+
+    # Check the ordering option specified by the user
+    if "-a" in args:
+        pirate_crew.sort(key=lambda x: x['name'])  # Sort alphabetically by character name
+    elif "-id" in args:
+        pirate_crew.sort(key=lambda x: x['id'])  # Sort by character ID
+    elif len(args) != 0:
+        await ctx.send("Invalid ordering option. Use '-a' for alphabetical ordering or '-id' for ordering by ID.")
+        return
+
+    # Format the pirate crew with character name and ID
+    crew_list = ""
+    for character in pirate_crew:
+        name_parts = character['name'].split()
+        name_parts = [part.capitalize() for part in name_parts]
+        formatted_name = " ".join(name_parts)
+        crew_list += f"ID: {character['id']} - {formatted_name}\n"
 
     embed = discord.Embed(title="Your Pirate Crew", description=crew_list, color=discord.Color.blue())
     embed.set_footer(text="One Piece Bot")
     await ctx.send(embed=embed)
 
-@bot.event
-async def on_disconnect():
-    with open("pirate_crews.json", "w") as file:
-        json.dump(pirate_crews, file)
 
+@bot.command(aliases=["s"])
+async def spawn(ctx):
+    global user_characters
+    global available_character
+
+    # Check if the user has caught all the characters
+    if len(user_characters.get(ctx.author.id, [])) == len(characters):
+        await ctx.send("You have already caught all the characters.")
+        return
+
+    # Randomly select a character that the user hasn't caught yet
+    available_characters = list(set(characters.keys()) - set([character['name'] for character in user_characters.get(ctx.author.id, [])]))
+    if not available_characters:
+        await ctx.send("You have already caught all the characters.")
+        return
+
+    spawned_character = random.choice(available_characters)
+
+    # Set the available character to the newly spawned character
+    available_character = spawned_character
+
+    character_image_url = characters[spawned_character]
+
+    # Create an embedded message
+    embed = discord.Embed(title="A One Piece character has been spawned!", color=discord.Color.blue())
+
+    # Add the catch instructions and character image to the embed
+    embed.add_field(name="Catch the character", value=f"Use the command `!catch` to catch the character.", inline=False)
+    embed.set_image(url=character_image_url)
+
+    await ctx.send(embed=embed)  # Send the embedded message
+
+@bot.command(aliases=['h'])
+async def hint(ctx):
+    global spawned_character
+    global available_character
+
+    if available_character is None:
+        await ctx.send("No character has been spawned. Use the `!spawn` command to spawn a character.")
+        return
+
+    hint = generate_hint(available_character)
+    formatted_hint = " ".join(list(hint))
+
+    embed = discord.Embed(title="Hint", description=f"Here's a hint for the spawned character:\n\n`{formatted_hint}`",
+                          color=discord.Color.blue())
+    await ctx.send(embed=embed)
+
+def generate_hint(character_name):
+    hint = ""
+    for c in character_name:
+        if c.isalpha():
+            hint += "_" if random.random() < 0.5 else c
+        else:
+            hint += c
+    return hint
+
+user_characters = {}  # Dictionary to store user characters
+available_character = None  # Variable to store the available character
+
+@bot.command(aliases=["c", "C"])
+async def catch(ctx, *, guess: str):
+    global user_characters
+    global available_character
+
+    if not available_character:
+        await ctx.send("No character is currently available to be caught.")
+        return
+
+    # Check if the caught character matches the available character (case-insensitive)
+    if guess.lower() != available_character.lower():
+        await ctx.send(f"You can only catch the currently available character, use !hint if you're unsure.")
+        return
+
+    # Get the array of characters for the user, or create a new array if it doesn't exist
+    user_character_array = user_characters.get(ctx.author.id, [])
+
+    # Generate a unique ID for the new character
+    character_id = len(user_character_array) + 1
+
+    # Create a dictionary representing the character
+    character = {
+        'id': character_id,
+        'name': available_character
+    }
+
+    # Add the character to the user's character array
+    user_character_array.append(character)
+
+    # Update the dictionary entry for the user
+    user_characters[ctx.author.id] = user_character_array
+
+    await ctx.send(f"Congratulations, {ctx.author.mention}! You have caught {available_character} and assigned ID: {character_id}")
+
+    # Clear the available_character variable
+    available_character = None
+global trade_requests
 trade_requests = {}
 
 @bot.command(aliases=['t'])
-async def trade(ctx, other_user: discord.Member, your_character: str, their_character: str):
-    # Convert character names to lowercase for case-insensitive search
-    your_character = your_character.lower()
-    their_character = their_character.lower()
-
-    # Check if the characters are valid and owned by the respective users
-    if not any(char.lower() == your_character for char in pirate_crews[ctx.author.id]):
-        await ctx.send(f"You don't own the character {your_character.capitalize()}.")
+async def trade(ctx, other_user: discord.Member, user1_character_id: Union[int, str] = None):
+    if user1_character_id is None:
+        await ctx.send("Please provide the ID or name of the character you want to trade.")
         return
 
-    if not any(char.lower() == their_character for char in pirate_crews[other_user.id]):
-        await ctx.send(f"{other_user.mention} doesn't own the character {their_character.capitalize()}.")
+    if isinstance(user1_character_id, str):
+        await ctx.send("Please provide the character ID instead of the character name.")
         return
 
-    # Store the trade request
-    trade_requests[other_user.id] = (ctx.author.id, your_character, their_character)
+    # Check if other_user is valid
+    if other_user.bot or other_user == ctx.author:
+        await ctx.send("Invalid trade request.")
+        return
 
-    await ctx.send(f"{other_user.mention}, {ctx.author.mention} wants to trade their {your_character.capitalize()} for your {their_character.capitalize()}. Do you accept? (Type `!accept` or `!decline`)")
+    # Check if user1_character_id is valid and owned by user1
+    user1_crew = user_characters.get(ctx.author.id, [])
+    if not user1_crew:
+        await ctx.send("You don't own any characters to trade.")
+        return
 
-@bot.command()
-async def accept(ctx):
-    # Check if the user has a pending trade request
-    if ctx.author.id in trade_requests:
-        # Retrieve the trade details
-        user1_id, user1_character, user2_character = trade_requests.pop(ctx.author.id)
+    if user1_character_id < 1 or user1_character_id > len(user1_crew):
+        await ctx.send(f"You don't own a character with ID {user1_character_id}.")
+        return
 
-        # Perform the trade
-        pirate_crews[user1_id] = [char if char.lower() != user1_character else user2_character.capitalize() for char in pirate_crews[user1_id]]
-        pirate_crews[ctx.author.id] = [char if char.lower() != user2_character else user1_character.capitalize() for char in pirate_crews[ctx.author.id]]
+    trade_message = await ctx.send(f"{other_user.mention}, {ctx.author.mention} wants to trade their character with ID {user1_character_id}. Do you accept? (React with ✅ or ❌)")
+    
+    await trade_message.add_reaction('✅')
+    await trade_message.add_reaction('❌')
 
-        await ctx.send(f"{ctx.author.mention} has accepted the trade! You have successfully traded your {user1_character.capitalize()} with {ctx.author.mention}'s {user2_character.capitalize()}.")
-    else:
-        await ctx.send("You don't have any pending trade requests.")
+    trade_requests[other_user.id] = (ctx.author.id, user1_character_id, trade_message.id)
 
-@bot.command()
-async def decline(ctx):
-    # Check if the user has a pending trade request
-    if ctx.author.id in trade_requests:
-        trade_requests.pop(ctx.author.id)
-        await ctx.send(f"{ctx.author.mention} has declined the trade request.")
-    else:
-        await ctx.send("You don't have any pending trade requests.")
 
 @bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandNotFound):
-        pass  # Ignore command not found errors
+async def on_reaction_add(reaction: Reaction, user: User):
+    if user == bot.user or user.bot:
+        return
+    print("test3")
+    if reaction.message.author == bot.user:
+        trade_message = reaction.message
+        trade_request = trade_requests.get(user.id)
+        print(trade_request)
+        print(trade_message.id)
+        if trade_request is not None and trade_message.id == trade_request[2]:
+            print("test5")
+            if str(reaction.emoji) == '✅':
+                user1_id, user1_character_id, message_id = trade_request
 
-    elif isinstance(error, commands.MissingRequiredArgument):
-        if ctx.command.name in ['trade', 't']:
-            await ctx.send(f"Please provide the correct usage: `!trade (user) (your character) (their character)`")
+                # Retrieve the trade details
+                user1_crew = user_characters.get(user1_id, [])
+                user2_crew = user_characters.get(user.id, [])
+                print("test2")
+                if user1_crew and user2_crew:
+                    user1_character = user1_crew[user1_character_id - 1]
+                    print("test1")
+                    await trade_message.channel.send(f"{user.mention}, please enter the ID of the character you want to trade.")
+
+                    def check_user2(m):
+                        return m.author == user and m.channel == trade_message.channel
+
+                    try:
+                        user2_trade_response = await bot.wait_for('message', check=check_user2, timeout=60)
+                        user2_character_id = int(user2_trade_response.content)
+
+                        if user2_character_id < 1 or user2_character_id > len(user2_crew):
+                            await trade_message.channel.send(f"{user.mention}, you don't own a character with ID {user2_character_id}. Trade canceled.")
+                            trade_requests.pop(user.id)
+                            return
+
+                        user2_character = user2_crew[user2_character_id - 1]
+                        user1_crew[user1_character_id - 1] = user2_character
+                        user2_crew[user2_character_id - 1] = user1_character
+
+                        await trade_message.channel.send(f"{user.mention} has accepted the trade! You have successfully traded your character '{user1_character['name']}' with {user.mention}'s character '{user2_character['name']}'. Trade successful!")
+                    except asyncio.TimeoutError:
+                        await trade_message.channel.send(f"{user.mention}, you took too long to respond. Trade canceled.")
+                else:
+                    await trade_message.channel.send(f"{user.mention}, you don't have any characters to trade. Trade canceled.")
+
+                trade_requests.pop(user.id)
+            elif str(reaction.emoji) == '❌':
+                trade_requests.pop(user.id)
+                await trade_message.channel.send(f"{user.mention} has declined the trade request.")
+
+@bot.command()
+async def addcharacter(ctx, character_id: int):
+    trade_request = trade_requests.get(ctx.author.id)
+
+    if trade_request is not None:
+        user1_id, message_id = trade_request
+
+        if message_id == ctx.message.id:
+            trade_requests.pop(ctx.author.id)
+
+            # Store the trade details
+            user1_character_id = character_id
+            user2_character_id = None
+
+            await ctx.send(f"{ctx.author.mention}, please ask {ctx.message.mentions[0].mention} to provide the ID of the character they want to trade.")
+
+            def check(message):
+                return message.author.id == ctx.message.mentions[0].id
+
+            try:
+                user2_character_id = await bot.wait_for('message', timeout=60.0, check=check)
+                user2_character_id = int(user2_character_id.content)
+            except asyncio.TimeoutError:
+                await ctx.send(f"{ctx.message.mentions[0].mention} did not provide the character ID in time. Trade cancelled.")
+                return
+
+            # Perform the trade
+            await ctx.send(f"{ctx.author.mention} has traded character ID {user1_character_id} with {ctx.message.mentions[0].mention}'s character ID {user2_character_id}.")
         else:
-            await ctx.send("Please provide the name of the character.")
-
+            await ctx.send("Please initiate a trade first before adding a character.")
     else:
-        await ctx.send(f"An error occurred: {type(error).__name__}")
+        await ctx.send("Please initiate a trade first before adding a character.")
+
+def get_character_id(user_id, character_name):
+    pirate_crew = pirate_crews.get(user_id)
+    if pirate_crew is not None:
+        for i, character in enumerate(pirate_crew):
+            if character.lower() == character_name:
+                return i + 1
+    return None
 
 # Load pirate crews from the file if it exists
 try:
     with open("pirate_crews.json", "r") as file:
-        pirate_crews = json.load(file)
+        pirate_crews_data = file.read()
+        pirate_crews = eval(pirate_crews_data)
 except FileNotFoundError:
     pirate_crews = {}
 
-# Run the bot using your token
-bot.run("code")
 
+# Run the bot using your token
+bot.run("test")
