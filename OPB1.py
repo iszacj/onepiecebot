@@ -234,29 +234,27 @@ async def trade(ctx, other_user: discord.Member, user1_character_id: Union[int, 
 
     trade_requests[other_user.id] = (ctx.author.id, user1_character_id, trade_message.id)
 
-
 @bot.event
 async def on_reaction_add(reaction: Reaction, user: User):
     if user == bot.user or user.bot:
         return
-    print("test3")
+    
     if reaction.message.author == bot.user:
         trade_message = reaction.message
         trade_request = trade_requests.get(user.id)
-        print(trade_request)
-        print(trade_message.id)
+        
         if trade_request is not None and trade_message.id == trade_request[2]:
-            print("test5")
+            
             if str(reaction.emoji) == '✅':
                 user1_id, user1_character_id, message_id = trade_request
 
                 # Retrieve the trade details
                 user1_crew = user_characters.get(user1_id, [])
                 user2_crew = user_characters.get(user.id, [])
-                print("test2")
+                
                 if user1_crew and user2_crew:
                     user1_character = user1_crew[user1_character_id - 1]
-                    print("test1")
+                    
                     await trade_message.channel.send(f"{user.mention}, please enter the ID of the character you want to trade.")
 
                     def check_user2(m):
@@ -286,39 +284,6 @@ async def on_reaction_add(reaction: Reaction, user: User):
                 trade_requests.pop(user.id)
                 await trade_message.channel.send(f"{user.mention} has declined the trade request.")
 
-@bot.command()
-async def addcharacter(ctx, character_id: int):
-    trade_request = trade_requests.get(ctx.author.id)
-
-    if trade_request is not None:
-        user1_id, message_id = trade_request
-
-        if message_id == ctx.message.id:
-            trade_requests.pop(ctx.author.id)
-
-            # Store the trade details
-            user1_character_id = character_id
-            user2_character_id = None
-
-            await ctx.send(f"{ctx.author.mention}, please ask {ctx.message.mentions[0].mention} to provide the ID of the character they want to trade.")
-
-            def check(message):
-                return message.author.id == ctx.message.mentions[0].id
-
-            try:
-                user2_character_id = await bot.wait_for('message', timeout=60.0, check=check)
-                user2_character_id = int(user2_character_id.content)
-            except asyncio.TimeoutError:
-                await ctx.send(f"{ctx.message.mentions[0].mention} did not provide the character ID in time. Trade cancelled.")
-                return
-
-            # Perform the trade
-            await ctx.send(f"{ctx.author.mention} has traded character ID {user1_character_id} with {ctx.message.mentions[0].mention}'s character ID {user2_character_id}.")
-        else:
-            await ctx.send("Please initiate a trade first before adding a character.")
-    else:
-        await ctx.send("Please initiate a trade first before adding a character.")
-
 def get_character_id(user_id, character_name):
     pirate_crew = pirate_crews.get(user_id)
     if pirate_crew is not None:
@@ -335,6 +300,5 @@ try:
 except FileNotFoundError:
     pirate_crews = {}
 
-
 # Run the bot using your token
-bot.run("MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GInnmk.9l22-WJfV96-RJwttBKEbCMnvBVOkzFHhMtWNw")
+bot.run("MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GOEBjZ.hnhuQ0b3UzQ4cv1Zty4HOy6Zs3xEZHMaQPcoxQ")
