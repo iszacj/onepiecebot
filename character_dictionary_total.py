@@ -21,10 +21,10 @@ characters = {
     "Usopp": "https://cdn.discordapp.com/attachments/1106203918729478195/1106221990106370068/usopp.png",
     "Sanji": "https://cdn.discordapp.com/attachments/1106203918729478195/1106221979893235712/sanji.png",
     "Chopper": "https://cdn.discordapp.com/attachments/1106203918729478195/1106221968560242688/chopper.png",
-    "Robin": "https://cdn.discordapp.com/attachments/1106203918729478195/1106223976180617247/robin.png",
+    "Nico Robin": "https://cdn.discordapp.com/attachments/1106203918729478195/1106223976180617247/robin.png",
     "Franky": "https://cdn.discordapp.com/attachments/1106203918729478195/1106223987232604190/franky.png",
     "Brook": "https://cdn.discordapp.com/attachments/1106203918729478195/1106223997613518878/brook.png",
     "Jinbe": "https://cdn.discordapp.com/attachments/1106203918729478195/1106224015900692530/jinbe.png",
 }
 
-# Add more characters and image links here...
+# SEPARATE CHARACTERS BY CREW/AFFILIATION FOR BETTER SORTING, ADD MORE CHARACTERS INTO THIS FILE
