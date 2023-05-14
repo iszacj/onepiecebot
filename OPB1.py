@@ -301,4 +301,4 @@ except FileNotFoundError:
     pirate_crews = {}
 
 # Run the bot using your token
-bot.run("MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GOEBjZ.hnhuQ0b3UzQ4cv1Zty4HOy6Zs3xEZHMaQPcoxQ")
+bot.run("MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GkomoF.qwQXIJeAomTyika4rWWkS9_ED6ehEXzJ5E43I8")

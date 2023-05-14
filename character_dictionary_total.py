@@ -81,6 +81,7 @@ characters = {
     "Diamante": "https://cdn.discordapp.com/attachments/1107237839911006228/1107238076029337621/1796.png",
     "Cavendish": "https://cdn.discordapp.com/attachments/1107237839911006228/1107239429216682004/1122.png",
     "Bartolomeow": "https://cdn.discordapp.com/attachments/1107237839911006228/1107239436376358983/1879.png",
+    "Baby 5": "https://cdn.discordapp.com/attachments/1107237839911006228/1107264829351264286/2849.png",
     
     # supernovas
     
@@ -118,6 +119,9 @@ characters = {
     "Stussy": "https://cdn.discordapp.com/attachments/1107239377941299210/1107239668048740382/3000.png",
     "Kaku": "https://cdn.discordapp.com/attachments/1107239377941299210/1107239668568821820/2482.png",
     "Rob Lucci": "https://cdn.discordapp.com/attachments/1107239377941299210/1107239668854046750/2670.png",
+
+    # admirals
+
     "Akainu": "https://cdn.discordapp.com/attachments/1106203961679155290/1106232045212016751/akainu.png",
     "Aokiji": "https://cdn.discordapp.com/attachments/1106203961679155290/1106232044767424592/aokiji.png",
     "Kizaru": "https://cdn.discordapp.com/attachments/1106203961679155290/1106232045711142953/kizaru.png",
