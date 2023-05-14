@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import discord
 from discord.ext import commands
 from discord import Reaction, User
@@ -365,3 +366,5 @@ except FileNotFoundError:
 
 # Run the bot using your token
 bot.run("test")
+=======
+>>>>>>> d5ea19517cd8a97bb5c5da8f4caf719a02f6e9eb
