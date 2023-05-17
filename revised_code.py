@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from discord.ext import commands
 from discord import Reaction, User
@@ -131,7 +132,7 @@ async def spawn(ctx):
     character_image_url = random.choice(characters_pictures[spawned_character])
 
     # Set the available character to the newly spawned character
-    available_character = Character(len(user_list.get(ctx.author.id).characters) + 1,f"{spawned_character}",1,character_image_url)
+    available_character = Character(f"{spawned_character}",1,character_image_url)
 
     
 
@@ -207,4 +208,106 @@ def save():
         pickle.dump(user_list,f)
         f.close
 
-bot.run("MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GkomoF.qwQXIJeAomTyika4rWWkS9_ED6ehEXzJ5E43I8")
+
+global trade_requests
+trade_requests = {}
+
+@bot.command(aliases=['t'])
+async def trade(ctx, other_user: discord.Member, user1_character_id: Union[int, str] = None):
+    if user1_character_id is None:
+        await ctx.send("Please provide the ID or name of the character you want to trade.")
+        return
+
+    if isinstance(user1_character_id, str):
+        await ctx.send("Please provide the character ID instead of the character name.")
+        return
+
+    # Check if other_user is valid
+    if other_user.bot or other_user == ctx.author:
+        await ctx.send("Invalid trade request.")
+        return
+
+    # Check if user1_character_id is valid and owned by user1
+    user1_crew = user_list.get(ctx.author.id).characters
+    if not user1_crew:
+        await ctx.send("You don't own any characters to trade.")
+        return
+
+    if user1_character_id < 1 or user1_character_id > len(user1_crew):
+        await ctx.send(f"You don't own a character with ID {user1_character_id}.")
+        return
+
+    trade_message = await ctx.send(f"{other_user.mention}, {ctx.author.mention} wants to trade their character with ID {user1_character_id}. Do you accept? (React with ✅ or ❌)")
+    
+    await trade_message.add_reaction('✅')
+    await trade_message.add_reaction('❌')
+
+    trade_requests[other_user.id] = (ctx.author.id, user1_character_id, trade_message.id)
+
+@bot.event
+async def on_reaction_add(reaction: Reaction, user: User):
+    if user == bot.user or user.bot:
+        return
+    
+    if reaction.message.author == bot.user:
+        trade_message = reaction.message
+        trade_request = trade_requests.get(user.id)
+        
+        if trade_request is not None and trade_message.id == trade_request[2]:
+            
+            if str(reaction.emoji) == '✅':
+                user1_id, user1_character_id, message_id = trade_request
+
+                # Retrieve the trade details
+                user1_crew = user_list.get(user1_id).characters
+                user2_crew = user_list.get(user.id).characters
+                
+                if user1_crew and user2_crew:
+                    user1_character = user1_crew[user1_character_id - 1]
+                    
+                    await trade_message.channel.send(f"{user.mention}, please enter the ID of the character you want to trade.")
+
+                    def check_user2(m):
+                        return m.author == user and m.channel == trade_message.channel
+
+                    try:
+                        user2_trade_response = await bot.wait_for('message', check=check_user2, timeout=60)
+                        user2_character_id = int(user2_trade_response.content)
+
+                        if user2_character_id < 1 or user2_character_id > len(user2_crew):
+                            await trade_message.channel.send(f"{user.mention}, you don't own a character with ID {user2_character_id}. Trade canceled.")
+                            trade_requests.pop(user.id)
+                            return
+
+                        user2_character = user2_crew[user2_character_id - 1]
+                        user1_crew[user1_character_id - 1] = user2_character
+                        user2_crew[user2_character_id - 1] = user1_character
+
+                        await trade_message.channel.send(f"{user.mention} has accepted the trade! You have successfully traded your character '{user1_character['name']}' with {user.mention}'s character '{user2_character['name']}'. Trade successful!")
+                    except asyncio.TimeoutError:
+                        await trade_message.channel.send(f"{user.mention}, you took too long to respond. Trade canceled.")
+                else:
+                    await trade_message.channel.send(f"{user.mention}, you don't have any characters to trade. Trade canceled.")
+
+                trade_requests.pop(user.id)
+            elif str(reaction.emoji) == '❌':
+                trade_requests.pop(user.id)
+                await trade_message.channel.send(f"{user.mention} has declined the trade request.")
+
+def get_character_id(user_id, character_name):
+    pirate_crew = pirate_crews.get(user_id)
+    if pirate_crew is not None:
+        for i, character in enumerate(pirate_crew):
+            if character.lower() == character_name:
+                return i + 1
+    return None
+
+# Load pirate crews from the file if it exists
+try:
+    with open("pirate_crews.json", "r") as file:
+        pirate_crews_data = file.read()
+        pirate_crews = eval(pirate_crews_data)
+except FileNotFoundError:
+    pirate_crews = {}
+
+bot.run("")
