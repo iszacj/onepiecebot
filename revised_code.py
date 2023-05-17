@@ -109,25 +109,8 @@ async def spawn(ctx):
     global user_list
     global available_character
     
-    users_crew = user_list.get(ctx.author.id).characters
-
-    unique_caught_characters = []
-    for character in users_crew:
-        if(not (character.name in unique_caught_characters)):
-            unique_caught_characters.append(character.name)
-
-    # Check if the user has caught all the characters
-    if len(unique_caught_characters) == len(characters_pictures):
-        await ctx.send("You have already caught all the characters.")
-        return
-
-    # Randomly select a character that the user hasn't caught yet
-    available_characters = list(set(characters_pictures.keys()) - set([character['name'] for character in unique_caught_characters]))
-    if not available_characters:
-        await ctx.send("You have already caught all the characters.")
-        return
-
-    spawned_character = random.choice(available_characters)
+    spawned_character = random.choice(list(characters_pictures.keys())
+)
     print(spawned_character)
     character_image_url = random.choice(characters_pictures[spawned_character])
 
@@ -310,4 +293,4 @@ try:
 except FileNotFoundError:
     pirate_crews = {}
 
-bot.run("")
+bot.run("MTEwNzEzMjc3Mzc4Mjc5NDMzMA.G1uHuC.mY869xvxwWGNa3ihzm9Fj5ymli-YeA5H5ba-3g")

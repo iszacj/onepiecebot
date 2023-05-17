@@ -1,7 +1,6 @@
 
 class Character():
-    def __init__(self,id,name,level,picture):
-        self.id = id
+    def __init__(self,name,level,picture):
         self.name = name
         self.level = level
         self.picture = picture
