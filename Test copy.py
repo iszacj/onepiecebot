@@ -18,4 +18,5 @@ USER_LIST[0] = User('Shazeel',[ZORO],None)
 
 with open('user_data.pickle', 'wb') as f:
     pickle.dump(USER_LIST,f)
+    f.close
 
