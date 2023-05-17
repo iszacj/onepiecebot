@@ -103,6 +103,29 @@ async def piratecrew(ctx, *, args=""):
     embed.set_footer(text="One Piece Bot")
     await ctx.send(embed=embed)
 
+@bot.command(aliases=["show"])
+async def display_character(ctx,id):
+    
+    if(id == None):
+        await ctx.send("Please Enter Id of character you want to see")
+        return
+    else:
+        try:
+            id = int(id)
+        except ValueError:
+            await ctx.send('Please Enter Id of character you want to see')
+    
+    print(user_list[ctx.author.id].characters)
+    character_to_show = user_list[ctx.author.id].characters[id]
+    print(character_to_show)
+    name_parts = character_to_show.name.split()
+    name_parts = [part.capitalize() for part in name_parts]
+    formatted_name = " ".join(name_parts)
+
+    embed = discord.Embed(title=f"{formatted_name}", color=discord.Color.blue())
+    embed.add_field(name="Level",value=f"{character_to_show.level}")
+    embed.set_image(url=f"{character_to_show.picture}")
+    await ctx.send(embed=embed)
 
 @bot.command(aliases=["s"])
 async def spawn(ctx):
@@ -285,12 +308,5 @@ def get_character_id(user_id, character_name):
                 return i + 1
     return None
 
-# Load pirate crews from the file if it exists
-try:
-    with open("pirate_crews.json", "r") as file:
-        pirate_crews_data = file.read()
-        pirate_crews = eval(pirate_crews_data)
-except FileNotFoundError:
-    pirate_crews = {}
 
-bot.run("MTEwNzEzMjc3Mzc4Mjc5NDMzMA.G1uHuC.mY869xvxwWGNa3ihzm9Fj5ymli-YeA5H5ba-3g")
+bot.run("MTEwNzEzMjc3Mzc4Mjc5NDMzMA.G5bRE9.vLDHC1R3tgpDnXFO921Ezk2aj49D06n32wjNKY")
