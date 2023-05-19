@@ -11,7 +11,7 @@ class Character():
 
 
 characters_pictures = {
-    "Shanks": [["https://cdn.discordapp.com/attachments/1106203961679155290/1106231484177715261/shanks.png","https://cdn.discordapp.com/attachments/1106203961679155290/1106231484634890250/benn_beckman.png"],[0.8,0.2],["","Shanks Test"],
+    "Shanks": [["https://cdn.discordapp.com/attachments/1106203961679155290/1106231484177715261/shanks.png","https://cdn.discordapp.com/attachments/1106203961679155290/1106231484634890250/benn_beckman.png"],[0.8,0.2],["", "Halloween Shanks"],
     ["Shanks Normal Desc", "Shanks Special Desc"]],
 
     "Benn Beckman": [["https://cdn.discordapp.com/attachments/1106203961679155290/1106231484634890250/benn_beckman.png"],[1],[""],
@@ -59,25 +59,27 @@ characters_pictures = {
     "Shiryu": [["https://cdn.discordapp.com/attachments/1106203961679155290/1106231446445772922/shiryu.png"],[1],[""],
     [""]],
 
-    "Luffy": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106220323159953468/IMG_1457.png"],[1],[""],
+    # strawhats
+
+    "Luffy": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106220323159953468/IMG_1457.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040225625329694/2749.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040225310740501/3365.png"],[1],["", "Halloween Luffy", "Germa Luffy"],
     [""]],
 
-    "Zoro": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106222017658765433/zoro.png"],[1],[""],
+    "Zoro": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106222017658765433/zoro.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040224660639784/2414.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040224983597107/3368.png"],[1],["", "Cowboy Zoro", "Germa Zoro"],
     [""]],
 
-    "Nami": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106222008393547806/nami.png"],[1],[""],
+    "Nami": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106222008393547806/nami.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040226313195550/2763.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040225994412122/3367.png"],[1],["", "Halloween Nami", "Germa Nami"],
     [""]],
 
-    "Usopp": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106221990106370068/usopp.png"],[1],[""],
+    "Usopp": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106221990106370068/usopp.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040265232125952/3679.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040264963702784/3371.png"],[1],["", "Kiss Usopp", "Germa Usopp"],
     [""]],
 
-    "Sanji": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106221979893235712/sanji.png"],[1],[""],
+    "Sanji": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106221979893235712/sanji.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040265580249168/3112.png"],[1],["", "Halloween Sanji", "Three Musketeers Sanji"],
     [""]],
 
-    "Chopper": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106221968560242688/chopper.png"],[1],[""],
+    "Chopper": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106221968560242688/chopper.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040266209398875/3551.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040265903226941/3366.png"],[1],["","Love-struck Chopper", "Germa Chopper"],
     [""]],
 
-    "Nico Robin": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106223976180617247/robin.png"],[1],[""],
+    "Nico Robin": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106223976180617247/robin.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040266565910558/3792.png", "https://cdn.discordapp.com/attachments/1109028698461589524/1109040266939219968/3370.png"],[1],["", "Devil Robin", "Germa Robin"],
     [""]],
 
     "Franky": [["https://cdn.discordapp.com/attachments/1106203918729478195/1106223987232604190/franky.png"],[1],[""],
