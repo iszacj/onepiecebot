@@ -2,11 +2,13 @@ import asyncio
 import discord
 from discord.ext import commands
 from discord import Reaction, User
+from discord.utils import get
 import random
 from typing import Union
 from character_dictionary_total import characters_pictures,Character
 import pickle
 import os.path
+import numpy as np
 
 # Add more characters and image links here...
 class User():
@@ -94,10 +96,15 @@ async def piratecrew(ctx, *, args=""):
     # Format the pirate crew with character name and ID
     crew_list = ""
     for character_id in pirate_crew:
-        name_parts = pirate_crew[character_id].name.split()
+        if(pirate_crew[character_id].special_name):
+            name_parts = pirate_crew[character_id].special_name.split()
+        else:
+            name_parts = pirate_crew[character_id].name.split()
         name_parts = [part.capitalize() for part in name_parts]
         formatted_name = " ".join(name_parts)
-        crew_list += f"ID: {character_id} - {formatted_name}\n"
+        await ctx.guild.create_custom_emoji(name='my_emoji', image=pirate_crew[character_id].picture)
+        emoji = get(ctx.guild.emojis, name="my_emoji")
+        crew_list += f"ID: {character_id} - {formatted_name}\n - {emoji}"
 
     embed = discord.Embed(title="Your Pirate Crew", description=crew_list, color=discord.Color.blue())
     embed.set_footer(text="One Piece Bot")
@@ -118,10 +125,14 @@ async def display_character(ctx,id):
     print(user_list[ctx.author.id].characters)
     character_to_show = user_list[ctx.author.id].characters[id]
     print(character_to_show)
-    name_parts = character_to_show.name.split()
+
+    if(character_to_show.special_name):
+        name_parts = character_to_show.special_name.split()
+    else:
+        name_parts = character_to_show.name.split()
     name_parts = [part.capitalize() for part in name_parts]
     formatted_name = " ".join(name_parts)
-
+    
     embed = discord.Embed(title=f"{formatted_name}", color=discord.Color.blue())
     embed.add_field(name="Level",value=f"{character_to_show.level}")
     embed.set_image(url=f"{character_to_show.picture}")
@@ -132,18 +143,32 @@ async def spawn(ctx):
     global user_list
     global available_character
     
-    spawned_character = random.choice(list(characters_pictures.keys())
+    spawned_character = np.random.choice(list(characters_pictures.keys())
 )
     print(spawned_character)
-    character_image_url = random.choice(characters_pictures[spawned_character])
+    Character_url_list = characters_pictures[spawned_character][0]
+    temp_list = []
+    for i in range(0,len(Character_url_list)):
+        temp_list.append(i)
 
-    # Set the available character to the newly spawned character
-    available_character = Character(f"{spawned_character}",1,character_image_url)
-
+    character_image_url_id = np.random.choice(temp_list,p=characters_pictures[spawned_character][1])
+    character_image_url = Character_url_list[character_image_url_id]
+    special = False
+    if(character_image_url_id != 0):
+        special = True
+        
     
-
-    # Create an embedded message
-    embed = discord.Embed(title="A One Piece character has been spawned!", color=discord.Color.blue())
+    # Set the available character to the newly spawned character
+    if(special):
+        available_character = Character(f"{spawned_character}",1,character_image_url,characters_pictures[spawned_character][2][character_image_url_id])
+    else:
+         available_character = Character(f"{spawned_character}",1,character_image_url,None)
+    
+    if(special):
+        embed = discord.Embed(title="A Special One Piece character has been spawned!", color=discord.Color.blue())
+    else:
+        # Create an embedded message
+        embed = discord.Embed(title="A One Piece character has been spawned!", color=discord.Color.blue())
 
     # Add the catch instructions and character image to the embed
     embed.add_field(name="Catch the character", value=f"Use the command `!catch` to catch the character.", inline=False)
@@ -192,8 +217,10 @@ async def catch(ctx, *, guess: str):
     if guess.lower() == available_character.name.lower():
         # Add the character to the user's pirate crew
         user_list[ctx.author.id].characters[len(user_list.get(ctx.author.id).characters) + 1] = available_character
-
-        await ctx.send(f"You caught {available_character.name}!")
+        if(available_character.special_name):
+            await ctx.send(f"You caught {available_character.special_name}!")
+        else:
+            await ctx.send(f"You caught {available_character.name}!")
         # Reset the available character to None
         available_character = None
         save()
@@ -300,13 +327,6 @@ async def on_reaction_add(reaction: Reaction, user: User):
                 trade_requests.pop(user.id)
                 await trade_message.channel.send(f"{user.mention} has declined the trade request.")
 
-def get_character_id(user_id, character_name):
-    pirate_crew = pirate_crews.get(user_id)
-    if pirate_crew is not None:
-        for i, character in enumerate(pirate_crew):
-            if character.lower() == character_name:
-                return i + 1
-    return None
 
 
-bot.run("MTEwNzEzMjc3Mzc4Mjc5NDMzMA.G5bRE9.vLDHC1R3tgpDnXFO921Ezk2aj49D06n32wjNKY")
+bot.run("")
