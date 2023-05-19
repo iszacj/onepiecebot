@@ -31,7 +31,7 @@ spawned_character = None  # Global variable to store the spawned character's nam
 
 
 user_list = {}  # Dictionary to store user characters
-available_character = None  # Variable to store the available character
+available_character = {}  # Variable to store the available character
 
 @bot.event
 async def on_ready():
@@ -172,9 +172,9 @@ async def spawn(ctx):
     
     # Set the available character to the newly spawned character
     if(special):
-        available_character = Character(f"{spawned_character}",1,character_image_url,characters_pictures[spawned_character][2][character_image_url_id],characters_pictures[spawned_character][3][character_image_url_id])
+        available_character[ctx.guild.id] = Character(f"{spawned_character}",1,character_image_url,characters_pictures[spawned_character][2][character_image_url_id],characters_pictures[spawned_character][3][character_image_url_id])
     else:
-         available_character = Character(f"{spawned_character}",1,character_image_url,None,characters_pictures[spawned_character][3][character_image_url_id])
+         available_character[ctx.guild.id] = Character(f"{spawned_character}",1,character_image_url,None,characters_pictures[spawned_character][3][character_image_url_id])
     
     if(special):
         embed = discord.Embed(title="A Special One Piece character has been spawned!", color=discord.Color.blue())
@@ -194,11 +194,11 @@ async def hint(ctx):
     global spawned_character
     global available_character
 
-    if available_character is None:
+    if available_character[ctx.guild.id] is None:
         await ctx.send("No character has been spawned. Use the `!spawn` command to spawn a character.")
         return
 
-    hint = generate_hint(available_character.name)
+    hint = generate_hint(available_character[ctx.guild.id].name)
     formatted_hint = " ".join(list(hint))
 
     embed = discord.Embed(title="Hint", description=f"Here's a hint for the spawned character:\n\n`{formatted_hint}`",
@@ -221,20 +221,20 @@ async def catch(ctx, *, guess: str):
     global user_list
     global available_character
 
-    if available_character is None:
+    if available_character[ctx.guild.id] is None:
         await ctx.send("No character has been spawned. Use the `!spawn` command to spawn a character.")
         return
 
     # Check if the guess is correct
-    if guess.lower() == available_character.name.lower():
+    if guess.lower() == available_character[ctx.guild.id].name.lower():
         # Add the character to the user's pirate crew
-        user_list[ctx.author.id].characters[len(user_list.get(ctx.author.id).characters) + 1] = available_character
-        if(available_character.special_name):
-            await ctx.send(f"You caught {available_character.special_name}!")
+        user_list[ctx.author.id].characters[len(user_list.get(ctx.author.id).characters) + 1] = available_character[ctx.guild.id]
+        if(available_character[ctx.guild.id].special_name):
+            await ctx.send(f"You caught {available_character[ctx.guild.id].special_name}!")
         else:
-            await ctx.send(f"You caught {available_character.name}!")
+            await ctx.send(f"You caught {available_character[ctx.guild.id].name}!")
         # Reset the available character to None
-        available_character = None
+        available_character[ctx.guild.id] = None
         save()
 
     else:
@@ -344,4 +344,4 @@ async def get_guild_id(ctx):
     guild_id = ctx.guild.id
     await ctx.send(f"The Guild ID is: {guild_id}")
 
-bot.run("MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GhVBRa.SLJLhAdWxtUNhlF_4Styn5CvXxihdAS1TxWKuE")
+bot.run("MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GBw3DZ.JIRtgh2Bu_KgoITRhBdusMPL_6sGzRjrZiPEcw")
