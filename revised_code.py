@@ -9,7 +9,8 @@ from character_dictionary_total import characters_pictures,Character
 import pickle
 import os.path
 import numpy as np
-
+import requests 
+import io
 # Add more characters and image links here...
 class User():
     def __init__(self,name,characters,message_count):
@@ -94,6 +95,7 @@ async def piratecrew(ctx, *, args=""):
         return
 
     # Format the pirate crew with character name and ID
+    emoji_list = []
     crew_list = ""
     for character_id in pirate_crew:
         if(pirate_crew[character_id].special_name):
@@ -102,13 +104,22 @@ async def piratecrew(ctx, *, args=""):
             name_parts = pirate_crew[character_id].name.split()
         name_parts = [part.capitalize() for part in name_parts]
         formatted_name = " ".join(name_parts)
-        await ctx.guild.create_custom_emoji(name='my_emoji', image=pirate_crew[character_id].picture)
-        emoji = get(ctx.guild.emojis, name="my_emoji")
-        crew_list += f"ID: {character_id} - {formatted_name}\n - {emoji}"
+        
+        response = requests.get(pirate_crew[character_id].picture)
+        emoji = await bot.get_guild(1089719818225188974).create_custom_emoji(name='emoji_name', image=response.content)
+        emoji_list.append(emoji)
+    
+    
+        
+        crew_list += f"ID: {character_id} - {formatted_name} - <:{emoji.name}:{emoji.id}> \n"
 
+    
     embed = discord.Embed(title="Your Pirate Crew", description=crew_list, color=discord.Color.blue())
     embed.set_footer(text="One Piece Bot")
     await ctx.send(embed=embed)
+
+    for emoji in emoji_list:
+        await emoji.delete()
 
 @bot.command(aliases=["show"])
 async def display_character(ctx,id):
@@ -327,6 +338,9 @@ async def on_reaction_add(reaction: Reaction, user: User):
                 trade_requests.pop(user.id)
                 await trade_message.channel.send(f"{user.mention} has declined the trade request.")
 
+@bot.command()
+async def get_guild_id(ctx):
+    guild_id = ctx.guild.id
+    await ctx.send(f"The Guild ID is: {guild_id}")
 
-
-bot.run("")
+bot.run("MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GhVBRa.SLJLhAdWxtUNhlF_4Styn5CvXxihdAS1TxWKuE")

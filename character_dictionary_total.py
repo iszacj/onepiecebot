@@ -6,6 +6,8 @@ class Character():
         self.picture = picture
         self.special_name = special_name
 
+#"Character name: [[Image Urls],[Probabilities of the corresponding image],[corresponding special names]
+
 characters_pictures = {
     "Shanks": [["https://cdn.discordapp.com/attachments/1106203961679155290/1106231484177715261/shanks.png","https://cdn.discordapp.com/attachments/1106203961679155290/1106231484634890250/benn_beckman.png"],[0.8,0.2],["Shanks","Shanks Test"]],
     "Benn Beckman": [["https://cdn.discordapp.com/attachments/1106203961679155290/1106231484634890250/benn_beckman.png"],[1]],
