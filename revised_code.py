@@ -68,7 +68,7 @@ async def on_message(message):
     if user_list[message.author.id].message_count >= spawn_threshold:
         # Reset the message count for the user
         user_list[message.author.id].message_count = 0
-        spawn(message)
+        await spawn(message)
 
     await bot.process_commands(message)  # Process other commands
 
@@ -146,6 +146,7 @@ async def display_character(ctx,id):
     
     embed = discord.Embed(title=f"{formatted_name}", color=discord.Color.blue())
     embed.add_field(name="Level",value=f"{character_to_show.level}")
+    embed.add_field(name="Description",value=character_to_show.description)
     embed.set_image(url=f"{character_to_show.picture}")
     await ctx.send(embed=embed)
 
@@ -171,9 +172,9 @@ async def spawn(ctx):
     
     # Set the available character to the newly spawned character
     if(special):
-        available_character = Character(f"{spawned_character}",1,character_image_url,characters_pictures[spawned_character][2][character_image_url_id])
+        available_character = Character(f"{spawned_character}",1,character_image_url,characters_pictures[spawned_character][2][character_image_url_id],characters_pictures[spawned_character][3][character_image_url_id])
     else:
-         available_character = Character(f"{spawned_character}",1,character_image_url,None)
+         available_character = Character(f"{spawned_character}",1,character_image_url,None,characters_pictures[spawned_character][3][character_image_url_id])
     
     if(special):
         embed = discord.Embed(title="A Special One Piece character has been spawned!", color=discord.Color.blue())
