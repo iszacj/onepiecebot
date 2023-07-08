@@ -1,22 +1,26 @@
 import asyncio
 import discord
-from discord.ext import commands
+from discord.ext import commands 
+#pip install cookies-discord-components
 from discord import Reaction, User
 from discord.utils import get
 import random
-from typing import Union
+from typing import Optional, Union
 from character_dictionary_total import characters_pictures,Character
 import pickle
 import os.path
 import numpy as np
 import requests 
 import io
+
+
 # Add more characters and image links here...
 class User():
-    def __init__(self,name,characters,message_count):
+    def __init__(self,name,characters,message_count,selected_character):
         self.name = name
         self.characters = characters
         self.message_count = message_count
+        self.selected_character = selected_character
 
 
 # Setting up the bot with necessary intents
@@ -31,7 +35,7 @@ spawned_character = None  # Global variable to store the spawned character's nam
 
 
 user_list = {}  # Dictionary to store user characters
-available_character = {}  # Variable to store the available character
+available_character = None  # Variable to store the available character
 
 @bot.event
 async def on_ready():
@@ -41,6 +45,8 @@ async def on_ready():
         with open('user_data.pickle', 'rb') as f:
             user_list = pickle.load(f)
             f.close()
+    for user in user_list:
+        print(f"{user_list[user].selected_character}")
     print(f"Logged in as {bot.user.name}")
 
 message_counts = {}  # Dictionary to store message counts per user
@@ -50,14 +56,26 @@ async def on_message(message):
     global user_list
     global message_counts
     global spawned_character
-
+    ctx = await bot.get_context(message)
     # Check if the author is the bot itself or a DM
     if message.author == bot.user or isinstance(message.channel, discord.DMChannel):
         return
 
     # Check if the author has a pirate crew list
     if user_list.get(message.author.id) is None:
-        user_list[message.author.id] = User(message.author.id,{},0)
+        user_list[message.author.id] = User(message.author.id,{},0,None)
+
+    print(f"{user_list[ctx.author.id].selected_character}")
+    if user_list[message.author.id].selected_character is not None:
+        selected_character = user_list[ctx.author.id].characters[user_list[ctx.author.id].selected_character]
+        selected_character.AddXp(1)
+
+        print(f"{selected_character.exp}")
+
+        if selected_character.exp >= selected_character.GetExpReq():
+            selected_character.exp = 0
+            selected_character.level += 1
+            await ctx.send(f"{selected_character.GetName()} leveled up")
 
     # Update the message count for the user
     user_list[message.author.id].message_count += 1
@@ -68,10 +86,100 @@ async def on_message(message):
     if user_list[message.author.id].message_count >= spawn_threshold:
         # Reset the message count for the user
         user_list[message.author.id].message_count = 0
-        await spawn(message)
+        await spawn(ctx)
 
     await bot.process_commands(message)  # Process other commands
 
+
+pirate_crew_page_numbers = {}
+class PirateCrewView(discord.ui.View):
+    def __init__(self,ctx, *, timeout: float | None = 180):
+        self.ctx = ctx
+        super().__init__(timeout=timeout)
+
+    @discord.ui.button(label="Back",style=discord.ButtonStyle.red)
+    async def back_button(self, interaction:discord.Interaction, button:discord.ui.Button):
+        if(not await self.check_interacter(interaction)):
+            return
+        DATA = await pirate_crew_display(self.ctx,back_or_forward=-1)
+        embed = DATA[0]
+        view = DATA[1]
+        await interaction.response.edit_message(embed=embed,view=view) 
+        self.stop()
+        
+
+    @discord.ui.button(label="Next",style=discord.ButtonStyle.green)
+    async def next_button(self,interaction:discord.Interaction, button:discord.ui.Button):
+        if(not await self.check_interacter(interaction)):
+            return
+        DATA = await pirate_crew_display(self.ctx,back_or_forward=1)
+        embed = DATA[0]
+        view = DATA[1]
+        self.stop()
+        await interaction.response.edit_message(embed=embed,view=view)
+        
+
+    async def check_interacter(self,interaction:discord.Interaction):
+        return interaction.user.id == self.ctx.author.id
+
+async def pirate_crew_display(ctx,pg_number = None, back_or_forward = None):
+    global user_list
+    user_character_array = user_list.get(ctx.author.id).characters
+
+    pirate_crew = user_character_array.copy()
+    
+    if(pg_number == None):
+        pg_number = pirate_crew_page_numbers[ctx.author.id] + back_or_forward
+
+    # Format the pirate crew with character name and ID
+    emoji_list = []
+    crew_list = ""
+    upper_limit = (pg_number * 10)
+    array_length  = len(user_character_array)
+
+    #emoji_list = DATA[1]
+    view = PirateCrewView(ctx)
+    if array_length < 10:
+        view.back_button.disabled = True
+        view.next_button.disabled = True
+    
+    if(array_length < upper_limit):
+        view.next_button.disabled=True
+    
+    if(pg_number == 1):
+        view.back_button.disabled = True
+    
+    modifier = 9
+    if(upper_limit > array_length):
+        modifier = 9 - (upper_limit - array_length)
+        upper_limit = array_length
+
+    for i in range(upper_limit - modifier, upper_limit + 1):
+        if(pirate_crew[i].special_name):
+            name_parts = pirate_crew[i].special_name.split()
+        else:
+            name_parts = pirate_crew[i].name.split()
+        name_parts = [part.capitalize() for part in name_parts]
+        formatted_name = " ".join(name_parts)
+        
+        response = requests.get(pirate_crew[i].picture)
+                                    # ThreePiecec 1089719818225188974
+                                    # Two Piece 233680080897966090
+        #emoji = await bot.get_guild(1089719818225188974).create_custom_emoji(name='emoji_name', image=response.content)
+        #emoji_list.append(emoji)
+    
+    
+        #crew_list += f"ID: {i} - {formatted_name} - <:{emoji.name}:{emoji.id}> \n"
+        crew_list += f"ID: {i} - {formatted_name}\n"
+    
+    
+    embed = discord.Embed(title="Your Pirate Crew page 1", description=crew_list, color=discord.Color.blue())
+    embed.set_footer(text="One Piece Bot")
+
+    pirate_crew_page_numbers[ctx.author.id] = pg_number 
+    return [embed,view]
+
+    
 @bot.command(aliases=['pc', 'crew'])
 async def piratecrew(ctx, *, args=""):
     global user_list
@@ -82,44 +190,14 @@ async def piratecrew(ctx, *, args=""):
         await ctx.send("Your pirate crew is empty.")
         return
 
-    pirate_crew = user_character_array.copy()
+    DATA = await pirate_crew_display(ctx,1)
+    embed = DATA[0]
+    view = DATA[1]
 
+    await ctx.send(embed=embed,view = view)
 
-    # Check the ordering option specified by the user
-    if "-a" in args:
-        pirate_crew.sort(key=lambda x: x.name)  # Sort alphabetically by character name
-    #elif "-id" in args:
-       #// pirate_crew.sort(key=lambda x: x['id'])  # Sort by character ID
-    elif len(args) != 0:
-        await ctx.send("Invalid ordering option. Use '-a' for alphabetical ordering or '-id' for ordering by ID.")
-        return
-
-    # Format the pirate crew with character name and ID
-    emoji_list = []
-    crew_list = ""
-    for character_id in pirate_crew:
-        if(pirate_crew[character_id].special_name):
-            name_parts = pirate_crew[character_id].special_name.split()
-        else:
-            name_parts = pirate_crew[character_id].name.split()
-        name_parts = [part.capitalize() for part in name_parts]
-        formatted_name = " ".join(name_parts)
-        
-        response = requests.get(pirate_crew[character_id].picture)
-        emoji = await bot.get_guild(1089719818225188974).create_custom_emoji(name='emoji_name', image=response.content)
-        emoji_list.append(emoji)
-    
-    
-        
-        crew_list += f"ID: {character_id} - {formatted_name} - <:{emoji.name}:{emoji.id}> \n"
-
-    
-    embed = discord.Embed(title="Your Pirate Crew", description=crew_list, color=discord.Color.blue())
-    embed.set_footer(text="One Piece Bot")
-    await ctx.send(embed=embed)
-
-    for emoji in emoji_list:
-        await emoji.delete()
+    #for emoji in emoji_list:
+        #await emoji.delete()
 
 @bot.command(aliases=["show"])
 async def display_character(ctx,id):
@@ -172,9 +250,9 @@ async def spawn(ctx):
     
     # Set the available character to the newly spawned character
     if(special):
-        available_character[ctx.guild.id] = Character(f"{spawned_character}",1,character_image_url,characters_pictures[spawned_character][2][character_image_url_id],characters_pictures[spawned_character][3][character_image_url_id])
+        available_character = Character(f"{spawned_character}",0,1,character_image_url,characters_pictures[spawned_character][2][character_image_url_id],characters_pictures[spawned_character][3][character_image_url_id])
     else:
-         available_character[ctx.guild.id] = Character(f"{spawned_character}",1,character_image_url,None,characters_pictures[spawned_character][3][character_image_url_id])
+         available_character = Character(f"{spawned_character}",0,1,character_image_url,None,characters_pictures[spawned_character][3][character_image_url_id])
     
     if(special):
         embed = discord.Embed(title="A Special One Piece character has been spawned!", color=discord.Color.blue())
@@ -194,11 +272,11 @@ async def hint(ctx):
     global spawned_character
     global available_character
 
-    if available_character[ctx.guild.id] is None:
+    if available_character is None:
         await ctx.send("No character has been spawned. Use the `!spawn` command to spawn a character.")
         return
 
-    hint = generate_hint(available_character[ctx.guild.id].name)
+    hint = generate_hint(available_character.name)
     formatted_hint = " ".join(list(hint))
 
     embed = discord.Embed(title="Hint", description=f"Here's a hint for the spawned character:\n\n`{formatted_hint}`",
@@ -221,20 +299,20 @@ async def catch(ctx, *, guess: str):
     global user_list
     global available_character
 
-    if available_character[ctx.guild.id] is None:
+    if available_character is None:
         await ctx.send("No character has been spawned. Use the `!spawn` command to spawn a character.")
         return
 
     # Check if the guess is correct
-    if guess.lower() == available_character[ctx.guild.id].name.lower():
+    if guess.lower() == available_character.name.lower():
         # Add the character to the user's pirate crew
-        user_list[ctx.author.id].characters[len(user_list.get(ctx.author.id).characters) + 1] = available_character[ctx.guild.id]
-        if(available_character[ctx.guild.id].special_name):
-            await ctx.send(f"You caught {available_character[ctx.guild.id].special_name}!")
+        user_list[ctx.author.id].characters[len(user_list.get(ctx.author.id).characters) + 1] = available_character
+        if(available_character.special_name):
+            await ctx.send(f"You caught {available_character.special_name}!")
         else:
-            await ctx.send(f"You caught {available_character[ctx.guild.id].name}!")
+            await ctx.send(f"You caught {available_character.name}!")
         # Reset the available character to None
-        available_character[ctx.guild.id] = None
+        available_character = None
         save()
 
     else:
@@ -246,6 +324,7 @@ async def save_command(ctx):
     with open('user_data.pickle', 'wb') as f:
         pickle.dump(user_list,f)
         f.close
+
 
 def save():
     global user_list
@@ -293,22 +372,24 @@ async def trade(ctx, other_user: discord.Member, user1_character_id: Union[int, 
 async def on_reaction_add(reaction: Reaction, user: User):
     if user == bot.user or user.bot:
         return
-    
+
+    # Trade Reaction
     if reaction.message.author == bot.user:
         trade_message = reaction.message
         trade_request = trade_requests.get(user.id)
         
         if trade_request is not None and trade_message.id == trade_request[2]:
-            
+                
             if str(reaction.emoji) == '✅':
                 user1_id, user1_character_id, message_id = trade_request
-
+                print(bot.get_user(int(user1_id)))
+                print(user1_id)
                 # Retrieve the trade details
                 user1_crew = user_list.get(user1_id).characters
                 user2_crew = user_list.get(user.id).characters
                 
                 if user1_crew and user2_crew:
-                    user1_character = user1_crew[user1_character_id - 1]
+                    user1_character = user1_crew[user1_character_id]
                     
                     await trade_message.channel.send(f"{user.mention}, please enter the ID of the character you want to trade.")
 
@@ -323,18 +404,29 @@ async def on_reaction_add(reaction: Reaction, user: User):
                             await trade_message.channel.send(f"{user.mention}, you don't own a character with ID {user2_character_id}. Trade canceled.")
                             trade_requests.pop(user.id)
                             return
+                        
+                        # if the selected character is being traded away default active character to first character in crew
+                        if user_list[user1_id].selected_character == user1_character_id:
+                            user_list[user1_id].selected_character = 1
 
-                        user2_character = user2_crew[user2_character_id - 1]
-                        user1_crew[user1_character_id - 1] = user2_character
-                        user2_crew[user2_character_id - 1] = user1_character
-
-                        await trade_message.channel.send(f"{user.mention} has accepted the trade! You have successfully traded your character '{user1_character['name']}' with {user.mention}'s character '{user2_character['name']}'. Trade successful!")
+                        if user_list[user.id].selected_character == user2_character_id:
+                            user_list[user.id].selected_character = 1
+                        
+                        user2_character = user2_crew[user2_character_id]
+                        user1_crew[user1_character_id] = user2_character
+                        user2_crew[user2_character_id] = user1_character
+                        
+                        name_1 = user1_character.name if not user1_character.special_name else user1_character.special_name
+                        name_2 = user2_character.name if not user2_character.special_name else user2_character.special_name
+                        
+                        await trade_message.channel.send(f"{user.mention} has accepted the trade! {bot.get_user(user1_id).mention} has successfully traded their character '{name_1}' with {user.mention}'s character '{name_2}'. Trade successful!")
                     except asyncio.TimeoutError:
                         await trade_message.channel.send(f"{user.mention}, you took too long to respond. Trade canceled.")
                 else:
                     await trade_message.channel.send(f"{user.mention}, you don't have any characters to trade. Trade canceled.")
 
                 trade_requests.pop(user.id)
+                save()
             elif str(reaction.emoji) == '❌':
                 trade_requests.pop(user.id)
                 await trade_message.channel.send(f"{user.mention} has declined the trade request.")
@@ -344,4 +436,28 @@ async def get_guild_id(ctx):
     guild_id = ctx.guild.id
     await ctx.send(f"The Guild ID is: {guild_id}")
 
-bot.run("MTEwNjAxMzA1NTQ5OTg5NDg5Ng.GBw3DZ.JIRtgh2Bu_KgoITRhBdusMPL_6sGzRjrZiPEcw")
+@bot.command(aliases=['select'])
+async def select_active_character(ctx,id = None):
+    if(id == None):
+        await ctx.send("Please Enter Id of character you want to select")
+        return
+    else:
+        try:
+            id = int(id)
+        except ValueError:
+            await ctx.send('Please Enter Id of character you want to select')
+    
+    if id > len(user_list[ctx.author.id].characters):
+        await ctx.send("Please enter id of character you want to select")
+        return
+    
+    if user_list[ctx.author.id].characters[id]:
+        user_list[ctx.author.id].selected_character = id
+        save()
+        await ctx.send(f"{user_list[ctx.author.id].characters[user_list[ctx.author.id].selected_character].GetName()}")
+    else:
+        await ctx.send("Please enter id of character you want to select")
+
+    
+
+bot.run("MTEwNzEzMjc3Mzc4Mjc5NDMzMA.GHq1OW.fbObqJIKe32iNwsuA7L_fStSKxUlBKXKZnZyiU")

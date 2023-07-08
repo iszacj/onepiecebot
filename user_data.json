@@ -1,0 +1,17 @@
+{
+    "233679947774951424": {
+        "name": 233679947774951424,
+        "characters": {
+            "1": {
+                "name": "Caesar",
+                "exp": 0,
+                "level": 1,
+                "picture": "https://cdn.discordapp.com/attachments/1107240782332698714/1107240829610901615/2731.png",
+                "special_name": null,
+                "description": ""
+            }
+        },
+        "message_count": 4,
+        "selected_character": 1
+    }
+}
