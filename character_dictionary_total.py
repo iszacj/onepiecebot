@@ -1,12 +1,24 @@
 
 class Character():
-    def __init__(self,name,level,picture,special_name, description):
+    def __init__(self,name,exp,level,picture,special_name, description):
         self.name = name
+        self.exp = exp
         self.level = level
         self.picture = picture
         self.special_name = special_name
         self.description = description
-
+    
+    def GetName(self):
+        if self.special_name:
+            return self.special_name
+        return self.name
+    
+    def AddXp(self,xp):
+        self.exp += xp
+        
+    
+    def GetExpReq(self):
+        return((self.level/0.3) ** 2)
 #"Character name: [[Image Urls],[Probabilities of the corresponding image],[corresponding special names],[descriptions]
 
 

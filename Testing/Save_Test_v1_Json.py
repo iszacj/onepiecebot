@@ -5,13 +5,7 @@ class User(json.JSONEncoder):
         self.name = name
         self.characters = characters
         self.message_count = message_count
-
-    def ConvertToDict(self):
-        new_characters = []
-        for character in self.characters:
-            new_characters.append(character.__dict__)
-        self.characters = new_characters
-        return(self.__dict__)
+    
 class Character():
     def __init__(self,name,level):
         self.name = name
@@ -21,10 +15,8 @@ ZORO = Character('zoro',0)
 USER_LIST = {}
 USER_LIST[0] = User('Shazeel',[ZORO],None)
 
-user_list = {}
-for user in USER_LIST:
-    user_list[user] = USER_LIST[user].ConvertToDict()
+json_str =json.dumps(USER_LIST,default=lambda o: o.__dict__,indent=4)
 
 with open('user_data.json', 'w') as f:
-    json.dump(user_list,f,indent=4)
+    f.write(json_str)
 
